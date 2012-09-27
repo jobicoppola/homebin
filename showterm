@@ -1,0 +1,14 @@
+#!/bin/bash
+# bring terminal to front
+
+TERMWIN='jterm'
+TERMWIN_ALT=$USER@$(hostname)
+
+which wmctrl
+[ "$?" == 0 ] || echo 'The `wmctrl` command could not be found.'
+
+if [[ $(wmctrl -l |grep -c "$TERMWIN") != 0 ]]; then
+    wmctrl -a "$TERMWIN"
+else
+    echo 'No matching windows found.'
+fi
