@@ -1,0 +1,44 @@
+#!/bin/bash
+
+export PATH=/bin:/usr/bin
+
+AUTOSSH_POLL=60
+AUTOSSH_DEBUG=yes
+AUTOSSH_PATH=/usr/bin/ssh
+AUTOSSH_LOGFILE=${REMOTE}.log
+
+export AUTOSSH_POLL AUTOSSH_LOGFILE AUTOSSH_DEBUG AUTOSSH_PATH \
+       AUTOSSH_GATETIME AUTOSSH_PORT
+
+[ -f "/etc/init.d/functions" ] && . /etc/init.d/functions
+
+print_dots() {
+    echo -n $"." && sleep .3 && echo -n $"." && sleep .3 && echo -n $"."
+}
+
+autossh_installed() {
+    echo -n $"Checking for autossh"
+    print_dots
+    OUTPUT=$( { yum list installed --quiet autossh >/dev/null; } 2>&1 )
+    RETVAL=$?
+    echo -n $"$OUTPUT"
+    [ $RETVAL -eq 0 ] && success || failure
+    echo
+    return $RETVAL
+}
+
+ssh_setup() {
+    [ -z "$SSH_AUTH_SOCK" ] && eval `ssh-agent -s`; ssh-add ~/.ssh/id_dsa
+}
+
+start_tunnel() {
+    [ -n "$1" ] && REMOTE="$1" || read -p "Remote server: " REMOTE
+    autossh -2 -f -M 22022 -nNT -R 8220:localhost:22 ${USER}@${REMOTE}
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+autossh_installed && start_tunnel
+
+exit $RETVAL
